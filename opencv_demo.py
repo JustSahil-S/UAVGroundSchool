@@ -1,23 +1,44 @@
-"""Minimal OpenCV check for the UAV Ground School environment."""
+"""Sample frames from a video and stitch them with OpenCV's built-in Stitcher."""
 
+import os
 import cv2
 
+VIDEO = "Minecraft_stitch_test.mp4"
+FRAME_STEP = 30 
+MAX_WIDTH = 1280
 
-def main() -> None:
-    print(f"OpenCV version: {cv2.__version__}")
+os.makedirs("output", exist_ok=True)
 
-    image = cv2.imread("sample.jpg")
-    if image is None:
-        print("No sample.jpg found. OpenCV is installed and ready to use.")
-        return
+cap = cv2.VideoCapture(VIDEO)
+if not cap.isOpened():
+    raise RuntimeError(f"Could not open {VIDEO}")
 
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    print(f"Loaded sample.jpg at {image.shape[1]}x{image.shape[0]}")
-    cv2.imshow("Original", image)
-    cv2.imshow("Grayscale", gray)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+frames = []
+index = 0
 
+while True:
+    ok, frame = cap.read()
+    if not ok:
+        break
 
-if __name__ == "__main__":
-    main()
+    if index % FRAME_STEP == 0:
+        height, width = frame.shape[:2]
+        if width > MAX_WIDTH:
+            scale = MAX_WIDTH / width
+            frame = cv2.resize(frame, (int(width * scale), int(height * scale)))
+        frames.append(frame)
+        cv2.imwrite(f"output/frame_{len(frames) - 1:03d}.jpg", frame)
+
+    index += 1
+
+cap.release()
+print(f"Sampled {len(frames)} frames")
+
+stitcher = cv2.Stitcher_create(cv2.Stitcher_SCANS)
+status, panorama = stitcher.stitch(frames)
+
+if status != cv2.Stitcher_OK:
+    raise RuntimeError(f"Stitching failed with status {status}")
+
+cv2.imwrite("output/panorama.jpg", panorama)
+print(f"Saved output/panorama.jpg ({panorama.shape[1]}x{panorama.shape[0]})")
