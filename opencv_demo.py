@@ -10,15 +10,12 @@ MAX_WIDTH = 1280
 os.makedirs("output", exist_ok=True)
 
 cap = cv2.VideoCapture(VIDEO)
-if not cap.isOpened():
-    raise RuntimeError(f"Could not open {VIDEO}")
-
 frames = []
 index = 0
 
 while True:
-    ok, frame = cap.read()
-    if not ok:
+    ret, frame = cap.read()
+    if not ret:
         break
 
     if index % FRAME_STEP == 0:
@@ -41,4 +38,3 @@ if status != cv2.Stitcher_OK:
     raise RuntimeError(f"Stitching failed with status {status}")
 
 cv2.imwrite("output/panorama.jpg", panorama)
-print(f"Saved output/panorama.jpg ({panorama.shape[1]}x{panorama.shape[0]})")
