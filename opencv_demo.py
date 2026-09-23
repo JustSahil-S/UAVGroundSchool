@@ -12,7 +12,7 @@ os.makedirs("output", exist_ok=True)
 cap = cv2.VideoCapture(VIDEO)
 frames = []
 index = 0
-
+#add video frames every 30 frames to frames array after resizing and scaling
 while True:
     ret, frame = cap.read()
     if not ret:
@@ -30,11 +30,11 @@ while True:
 
 cap.release()
 print(f"Sampled {len(frames)} frames")
-
+#create stitcher and input frames
 stitcher = cv2.Stitcher_create(cv2.Stitcher_SCANS)
 status, panorama = stitcher.stitch(frames)
 
 if status != cv2.Stitcher_OK:
     raise RuntimeError(f"Stitching failed with status {status}")
-
+#write stitched image to a new file
 cv2.imwrite("output/panorama.jpg", panorama)
